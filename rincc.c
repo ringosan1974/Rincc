@@ -38,6 +38,10 @@ struct Node {
     int val;        //kindがND_NUMの場合のみ使う
 };
 
+Node *expr();
+Node *mul();
+Node *primary();
+
 //現在着目してるトークン
 Token *token;
 
