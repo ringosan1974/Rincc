@@ -8,33 +8,33 @@
 //トークンの種類
 typedef enum {
     TK_RESERVED,    //記号
-    TK_NUM,         //次の入力トークン
-    TK_EOF,         //入力の終わりを表すトークン
+    TK_NUM,         //数値
+    TK_EOF,         //入力の終わり
 } TokenKind;
 
 typedef struct Token Token;
 
 struct Token{
-    TokenKind kind; //トークンの型
+    TokenKind kind; //トークンの種類
     Token *next;    //次の入力トークン
     int val;        //KindがTK_NUMの場合，その数値
-    char *str;      //トークン文字列
+    char *str;      //トークンの文字列
 };
 
 typedef enum {
-    ND_ADD, // +
-    ND_SUB, // -
-    ND_MUL, // *
-    ND_DIV, // /
-    ND_NUM, // 整数
+    ND_ADD, //加算
+    ND_SUB, //減算
+    ND_MUL, //乗算
+    ND_DIV, //除算
+    ND_NUM, //整数
 } NodeKind;
 
 typedef struct Node Node;
 
 struct Node {
-    NodeKind kind;  // ノードの型
-    Node *lhs;      // 左辺
-    Node *rhs;      // 右辺
+    NodeKind kind;  //ノードの種類
+    Node *lhs;      //左辺
+    Node *rhs;      //右辺
     int val;        //kindがND_NUMの場合のみ使う
 };
 
@@ -54,7 +54,7 @@ Node *primary();
 //現在着目してるトークン
 Token *token;
 
-//入力プログラム
+//入力されたプログラム
 char *user_input;
 
 //エラー箇所を報告する
@@ -71,8 +71,7 @@ void error_at(char *loc, char *fmt, ...) {
     exit(1);
 }
 
-//次のトークンが期待している記号のときには，トークンを一つ読み進めて真を返す。
-//それ以外の場合には偽を返す。
+//次のトークンが記号opのときには，トークンを一つ読み進めてtrueを返す。それ以外の場合にはfalseを返す。
 bool consume(char op) {
     if (token->kind != TK_RESERVED || token->str[0] != op) {
         return false;
@@ -81,8 +80,8 @@ bool consume(char op) {
     return true;
 }
 
-//次のトークンが期待している記号のときには，トークンを一つ読み進める。
-//それ以外の場合にはエラーを報告する。
+//次のトークンが記号opのときには，トークンを一つ読み進める。
+//それ以外の場合にはエラーを報告
 void expect(char op) {
     if (token->kind != TK_RESERVED || token->str[0] != op) {
         error_at(token->str, "'%c'ではありません", op);
@@ -91,7 +90,7 @@ void expect(char op) {
 }
 
 //次のトークンが数値の場合，トークンを一つ読み進めてその数値を返す。
-//それ以外の場合にはエラーを報告する。
+//それ以外の場合にはエラーを報告
 int expect_number() {
     if (token->kind != TK_NUM) {
         error_at(token->str, "数ではありません");
@@ -101,6 +100,7 @@ int expect_number() {
     return val;
 }
 
+//入力されたコードの終わりであるか否かを返す
 bool at_eof() {
     return token->kind == TK_EOF;
 }
@@ -141,7 +141,7 @@ Token *tokenize(char *p) {
     return head.next;
 }
 
-//新しいノードを生成（二項演算子の場合）
+//新しいノードを生成
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
@@ -198,7 +198,7 @@ Node *primary() {
     return new_node_num(expect_number());
 }
 
-//抽象構文木を下りながらコード生成
+//抽象構文木を下りながら構文木の左端からコード生成
 void gen(Node *node) {
     if (node->kind == ND_NUM)
     {
@@ -243,12 +243,11 @@ int main(int argc, char **argv) {
     token = tokenize(user_input);
     Node *node = expr();
 
-    //アセンブリ前半を出力
+    //アセンブリ前半
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
-    
-    //抽象構文木を下りながらコード生成
+
     gen(node);
 
     //スタックトップに式全体の値が残っているはずなので
