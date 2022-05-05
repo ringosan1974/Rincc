@@ -12,14 +12,6 @@ typedef enum {
     TK_EOF,         //入力の終わりを表すトークン
 } TokenKind;
 
-typedef enum {
-    ND_ADD, // +
-    ND_SUB, // -
-    ND_MUL, // *
-    ND_DIV, // /
-    ND_NUM, // 整数
-} NodeKind;
-
 typedef struct Token Token;
 
 struct Token{
@@ -28,6 +20,14 @@ struct Token{
     int val;        //KindがTK_NUMの場合，その数値
     char *str;      //トークン文字列
 };
+
+typedef enum {
+    ND_ADD, // +
+    ND_SUB, // -
+    ND_MUL, // *
+    ND_DIV, // /
+    ND_NUM, // 整数
+} NodeKind;
 
 typedef struct Node Node;
 
@@ -38,6 +38,15 @@ struct Node {
     int val;        //kindがND_NUMの場合のみ使う
 };
 
+void error_at(char *loc, char *fmt, ...);
+bool consume(char op);
+void expect(char op);
+int expect_number();
+bool at_eof();
+Token *new_token(TokenKind kind, Token *cur, char *str);
+Token *tokenize(char *p);
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
+Node *new_node_num(int val);
 Node *expr();
 Node *mul();
 Node *primary();
@@ -116,7 +125,7 @@ Token *tokenize(char *p) {
         if (isspace(*p)) {
             p++;
             continue;
-        } else if (*p == '+' || *p == '-') {
+        } else if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
             cur = new_token(TK_RESERVED, cur, p++);
             continue;
         } else if (isdigit(*p)) {
@@ -132,7 +141,7 @@ Token *tokenize(char *p) {
     return head.next;
 }
 
-//新しい構文木を生成（二項演算子の場合）
+//新しいノードを生成（二項演算子の場合）
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = kind;
@@ -141,7 +150,7 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     return node;
 }
 
-//新しい構文木を生成（数値の場合）
+//新しいノードを生成（数値の場合）
 Node *new_node_num(int val) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_NUM;
@@ -149,6 +158,7 @@ Node *new_node_num(int val) {
     return node;
 }
 
+//expr(), mul(), primary()によって抽象構文木を生成
 Node *expr() {
     Node *node = mul();
 
@@ -188,6 +198,39 @@ Node *primary() {
     return new_node_num(expect_number());
 }
 
+//抽象構文木を下りながらコード生成
+void gen(Node *node) {
+    if (node->kind == ND_NUM)
+    {
+        printf("    push %d\n", node->val);
+        return;
+    }
+    gen(node->lhs);
+    gen(node->rhs);
+
+    printf("    pop rdi\n");
+    printf("    pop rax\n");
+
+    switch (node->kind)
+    {
+    case ND_ADD:
+        printf("    add rax, rdi\n");
+        break;
+    case ND_SUB:
+        printf("    sub rax, rdi\n");
+        break;
+    case ND_MUL:
+        printf("    imul rax, rdi\n");
+        break;
+    case ND_DIV:
+        printf("    cqo\n");
+        printf("    idiv rdi\n");
+        break;
+    }
+
+    printf("    push rax\n");
+}
+
 int main(int argc, char **argv) {
     if (argc != 2)
     {
@@ -195,31 +238,22 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    //トークナイズする
+    //トークナイズしてパースする
     user_input = argv[1];
     token = tokenize(user_input);
+    Node *node = expr();
 
-    //アセンブリ前半
+    //アセンブリ前半を出力
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     printf("main:\n");
-
-    //式の最初は数でなければならないので，それをチェックして最初のmov命令を出力
-    printf("    mov rax, %d\n", expect_number());
-
-    //'+ <num>' あるいは '- <num>' というトークンの並びを消費しつつアセンブリを出力
-    while (!at_eof())
-    {
-        if (consume('+'))
-        {
-            printf("    add rax, %d\n", expect_number());
-            continue;
-        }
-        
-        expect('-');
-        printf("    sub rax, %d\n", expect_number());
-    }
     
+    //抽象構文木を下りながらコード生成
+    gen(node);
+
+    //スタックトップに式全体の値が残っているはずなので
+    //それをraxにロードして関数からの返り値とする
+    printf("    pop rax\n");
     printf("    ret\n");
     return 0;
 }

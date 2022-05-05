@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/sh
 assert() {
     expected="$1"
     input="$2"
@@ -16,6 +16,7 @@ assert() {
     fi
 }
 
-assert 21 " 5 + 20 - 4 "
+assert 21 "1 + 5 * 4"
+assert 3 "( 1 + 5 ) / 2"
 
 echo OK
