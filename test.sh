@@ -16,7 +16,6 @@ assert() {
     fi
 }
 
-assert 21 "1 + 5 * 4"
-assert 3 "( 1 + 5 ) / 2"
+assert 20 "-10 * -2"
 
 echo OK
