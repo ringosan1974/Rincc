@@ -1,6 +1,11 @@
 CFLAGS=-std=c11 -g -static
+SRCS=$(wildcard *.c)
+OBJS=$(SRCS:.c=.o)
 
-rincc: rincc.c
+rincc: $(OBJS)
+	$(CC) -o rincc $(OBJS) $(LDFLAGS)
+
+$(OBJS): rincc.h
 
 test: rincc
 	./test.sh
