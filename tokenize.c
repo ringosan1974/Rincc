@@ -76,6 +76,9 @@ Token *tokenize(char *p) {
         if (isspace(*p)) {
             p++;
             continue;
+        } else if ('a' <= *p && *p <= 'z') {
+            cur = new_token(TK_IDENT, cur, p++, 1);
+            continue;
         } else if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "=>") || startswith(p, "=<")) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
