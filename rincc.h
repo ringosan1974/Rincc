@@ -31,6 +31,7 @@ typedef enum {
     ND_SUB, //減算
     ND_MUL, //乗算
     ND_DIV, //除算
+    ND_ASSIGN,  //代入符号
     ND_EQ,  //イコール
     ND_NEQ, //ノットイコール
     ND_NUM, //整数
@@ -57,7 +58,10 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize(char *p);
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
+void program();
+Node *stmt();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();

@@ -18,8 +18,37 @@ Node *new_node_num(int val) {
 }
 
 //抽象構文木を生成
+
+Node *code[100];
+
+void program() {
+    int i = 0;
+    while (!at_eof())
+    {
+        code[i++] = stmt();
+    }
+    code[i] = NULL;
+    
+}
+
+Node *stmt() {
+    Node *node = expr();
+    expect(";");
+    return node;
+}
+
 Node *expr() {
+    return assign();
+}
+
+Node *assign() {
     Node *node = equality();
+    if (consume("="))
+    {
+        node = new_node(ND_ASSIGN, node, assign());
+    }
+    return node;
+    
 }
 
 Node *equality() {
