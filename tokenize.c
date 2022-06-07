@@ -25,6 +25,17 @@ bool consume(char *op) {
     return true;
 }
 
+//次のトークンが識別子のときには、トークンを一つ読み進めてその次のトークンのポインタを返す
+Token *consume_ident()  {
+    if (token->kind != TK_IDENT)
+    {
+        return NULL;
+    }
+    Token *t = token;
+    token = token->next;
+    return t;    
+}
+
 //次のトークンが記号opのときには，トークンを一つ読み進める。
 //それ以外の場合にはエラーを報告
 void expect(char *op) {
