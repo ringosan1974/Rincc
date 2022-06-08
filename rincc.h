@@ -50,6 +50,7 @@ struct Node {
     int offset;     //kindがND_LVARの場合のみ使う
 };
 
+void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 bool consume(char *op);
 Token *consume_ident();
@@ -71,6 +72,7 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
+void gen(Node* node);
 void gen(Node* node);
 
 //現在着目してるトークン
