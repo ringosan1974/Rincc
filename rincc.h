@@ -81,4 +81,7 @@ extern Token *token;
 //入力されたプログラム
 extern char *user_input;
 
+//セミコロンごとに区切られたコードを格納するリスト
+Node *code[100];
+
 #endif

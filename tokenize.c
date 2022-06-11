@@ -99,6 +99,9 @@ Token *tokenize(char *p) {
         } else if ('a' <= *p && *p <= 'z') {
             cur = new_token(TK_IDENT, cur, p++, 1);
             continue;
+        } else if (*p == '=') {
+            cur = new_token(TK_RESERVED, cur, p++, 1);
+            continue;
         } else if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "=>") || startswith(p, "=<")) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
@@ -111,6 +114,9 @@ Token *tokenize(char *p) {
             char *q = p;
             cur->val = strtol(p, &p, 10);
             cur->len = p - q;
+            continue;
+        } else if (*p == ';') {
+            cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
         

@@ -18,9 +18,6 @@ Node *new_node_num(int val) {
 }
 
 //抽象構文木を生成
-
-Node *code[100];
-
 void program() {
     int i = 0;
     while (!at_eof())
