@@ -12,34 +12,34 @@ void gen_lval(Node *node) {
 }
 
 //抽象構文木を下りながら構文木の左端からコード生成
-void gen(Node *node) {
-    switch (node->kind)
+void gen(Node *prog) {
+    switch (prog->kind)
     {
     case ND_NUM:
-        printf("    push %d\n", node->val);
+        printf("    push %d\n", prog->val);
         return;
     case ND_LVAR:
-        gen_lval(node);
+        gen_lval(prog);
         printf("    pop rax\n");
         printf("    mov rax, [rax]\n");
         printf("    push rax\n");
         return;
     case ND_ASSIGN:
-        gen_lval(node->lhs);
-        gen(node->rhs);
+        gen_lval(prog->lhs);
+        gen(prog->rhs);
         printf("    pop rdi\n");
         printf("    pop rax\n");
         printf("    mov [rax], rdi\n");
         printf("    push rdi\n");
 }
 
-    gen(node->lhs);
-    gen(node->rhs);
+    gen(prog->lhs);
+    gen(prog->rhs);
 
     printf("    pop rdi\n");
     printf("    pop rax\n");
 
-    switch (node->kind)
+    switch (prog->kind)
     {
     case ND_ADD:
         printf("    add rax, rdi\n");
@@ -77,4 +77,27 @@ void gen(Node *node) {
     }
 
     printf("    push rax\n");
+}
+
+void codegen() {
+    //アセンブリ前半
+    printf(".intel_syntax noprefix\n");
+    printf(".globl main\n");
+    printf("main:\n");
+
+    //プロローグ
+    //変数26個分の領域を確保する
+    printf("    push rbp\n");
+    printf("    mov rbp, rsp\n");
+    printf("    sub rsp, %d\n", stack_size);
+    
+    for (int i = 0; code[i]; i++)
+    {
+        gen(code[i]);
+        printf("    pop rax\n");
+    }
+    
+    printf("    mov rsp, rbp\n");
+    printf("    pop rbp\n");
+    printf("    ret\n");
 }

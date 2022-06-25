@@ -16,8 +16,17 @@ assert() {
     fi
 }
 
-assert 5 "a = 1 + 1;
-b = 2 + 1;
-a + b;
+assert 2 "foo = 1;
+bar = 1;
+foo + bar;
 "
+assert 4 "foo = 1 + 1;
+bar = 1 + 1;
+foo + bar;
+"
+assert 10 "foo = 2 + 3;
+bar = foo * 2;
+bar;
+"
+
 echo OK

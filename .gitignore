@@ -1,5 +1,7 @@
 *~
 *.o
+*.txt
+ptest.c
 tmp*
 a.out
 rincc

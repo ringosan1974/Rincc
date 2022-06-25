@@ -1,5 +1,8 @@
 #include "rincc.h"
 
+Node *code[100];
+LVar *locals = NULL;
+
 //新しいノードを生成
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     Node *node = calloc(1, sizeof(Node));
@@ -17,15 +20,27 @@ Node *new_node_num(int val) {
     return node;
 }
 
+LVar *find_Lvar(Token *tok) {
+    //ポインタがどこを指しているのかがよくわからん
+    for (LVar *var = locals; var; var = var->next)
+    {
+        if (strcmp(var->name, tok->str))
+        {
+            return var;
+        }
+    }
+    return NULL; 
+}
+
 //抽象構文木を生成
-void program() {
+Node *program() {
     int i = 0;
     while (!at_eof())
     {
         code[i++] = stmt();
     }
     code[i] = NULL;
-    
+    return code[0];
 }
 
 Node *stmt() {
@@ -133,12 +148,32 @@ Node *primary() {
         return node;
     }
 
+    //ここでconsume_ident()の中のTokenのポインタ*tはポインタtoken”自体の”アドレスを指している。
+    //なのでtokenの指すアドレスが変わっても*tが指す場所は変わらない。
     Token *tok = consume_ident();
     if (tok)
     {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8;
+        LVar *lvar = find_Lvar(tok);
+        if (lvar)
+        {
+            node->offset = lvar->offset;
+        } else {
+            if (locals == NULL) //もしlocalsがヌルポインタだったら0クリアしたLVarを代入しておく
+            {
+                locals = calloc(1, sizeof(LVar));
+            }
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = locals->offset + 8;
+            node->offset = lvar->offset;
+            locals = lvar;
+            stack_size += 8;
+        }
+        
         return node;
     }
     
